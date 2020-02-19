@@ -17,7 +17,7 @@ A [Sourcegraph extension](https://docs.sourcegraph.com/extensions) to export a l
 
 1. Add the extension at https://sourcegraph.com/extensions/sourcegraph/search-export or on the **Extensions** page of your self-hosted instance.
 1. Perform a search query on Sourcegraph.
-1. Press the **Export to CSV** button above the list of search results.
+1. Press the **Export to CSV** button above the list of search results. (Note: This may take a while for large result sets. The extension is not optimized for streaming or paginating results.)
 1. Copy the CSV from the browser devtools console.
 
 ## Development
