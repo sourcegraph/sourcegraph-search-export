@@ -1,5 +1,5 @@
-import * as sourcegraph from 'sourcegraph'
 import { Base64 } from 'js-base64'
+import * as sourcegraph from 'sourcegraph'
 
 /**
  * A subset of the SearchResult type defined in the Sourcegraph GraphQL API.
@@ -15,6 +15,10 @@ interface SearchResult {
         canonicalURL: string
         externalURLs: { url: string }[]
     }
+    lineMatches: {
+        preview: string
+        offsetAndLengths: number[][]
+    }[]
 }
 
 export function activate(ctx: sourcegraph.ExtensionContext): void {
@@ -50,6 +54,10 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                             url
                                         }
                                     }
+                                    lineMatches {
+                                      preview
+                                      offsetAndLengths
+                                    }
                                 }
                             }
                         }
@@ -76,6 +84,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                         'File path',
                         'File URL',
                         'File external URL',
+                        'Search matches',
                     ],
                     ...results.map(r =>
                         [
@@ -87,6 +96,18 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                 sourcegraph.internal.sourcegraphURL
                             ).toString(),
                             r.file.externalURLs[0]?.url,
+                            r.lineMatches
+                                .map(line =>
+                                    line.offsetAndLengths
+                                        .map(offset =>
+                                            line.preview?.substring(
+                                                offset[0],
+                                                offset[0] + offset[1]
+                                            )
+                                        )
+                                        .join(' ')
+                                )
+                                .join(' '),
                         ].map(s => JSON.stringify(s))
                     ),
                 ]
