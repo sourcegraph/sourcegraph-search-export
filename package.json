@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/sourcegraph/sourcegraph/master/shared/src/schema/extension.schema.json",
+  "$schema": "https://raw.githubusercontent.com/sourcegraph/sourcegraph/main/client/shared/src/schema/extension.schema.json",
   "name": "search-export",
   "publisher": "sourcegraph",
   "description": "Export search results as CSV",
@@ -29,7 +29,8 @@
         "id": "searchExport.export",
         "command": "searchExport.exportSearchResultsToCSV",
         "commandArguments": [
-          "${get(context, 'searchQuery')}"
+          "${get(context, 'searchQuery')}",
+          "${get(context, 'patternType')}"
         ],
         "title": "Export search results",
         "category": "Sourcegraph",
@@ -45,6 +46,17 @@
           "action": "searchExport.export"
         }
       ]
+    },
+    "configuration": {
+      "title": "Search export settings",
+      "properties": {
+        "searchExport.searchPatternType": {
+          "description": "Search pattern type to use. Starting with Sourcegraph 3.29, search pattern type will be in sync with the search bar.",
+          "type":"string",
+          "enum": ["literal", "regexp", "structural"],
+          "default": "literal"
+        }
+      }
     }
   },
   "main": "dist/extension.js",
