@@ -35,7 +35,7 @@
         "category": "Sourcegraph",
         "actionItem": {
           "label": "Export to CSV",
-          "description": "Prints to the browser devtools console"
+          "description": "Download CSV file"
         }
       }
     ],
