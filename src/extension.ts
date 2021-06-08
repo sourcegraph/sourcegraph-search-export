@@ -22,9 +22,9 @@ interface SearchResult {
     }[]
 }
 
+const searchPatternTypes = ['literal', 'regexp', 'structural'] as const
 /** The search pattern type. */
 type SearchPatternType = typeof searchPatternTypes[number]
-const searchPatternTypes = ['literal', 'regexp', 'structural'] as const
 
 interface Settings {
     ['searchExport.searchPatternType']?: SearchPatternType
