@@ -22,11 +22,37 @@ interface SearchResult {
     }[]
 }
 
+const searchPatternTypes = ['literal', 'regexp', 'structural'] as const
+/** The search pattern type. */
+type SearchPatternType = typeof searchPatternTypes[number]
+
+interface Settings {
+    ['searchExport.searchPatternType']?: SearchPatternType
+}
+
 export function activate(ctx: sourcegraph.ExtensionContext): void {
     ctx.subscriptions.add(
         sourcegraph.commands.registerCommand(
             'searchExport.exportSearchResultsToCSV',
-            async (query: string): Promise<void> => {
+            async (
+                query: string,
+                searchBarPatternType: SearchPatternType
+            ): Promise<void> => {
+                const userFallbackPatternType = sourcegraph.configuration.get<
+                    Settings
+                >().value['searchExport.searchPatternType']
+
+                // Before Sourcegraph 3.29, search toolbar context didn't include search pattern type, so
+                // fallback to "mode" setting, default to 'literal'
+                const patternType: SearchPatternType = searchPatternTypes.includes(
+                    searchBarPatternType
+                )
+                    ? searchBarPatternType
+                    : userFallbackPatternType &&
+                      searchPatternTypes.includes(userFallbackPatternType)
+                    ? userFallbackPatternType
+                    : 'literal'
+
                 const {
                     data,
                     errors,
@@ -36,8 +62,8 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 } = await sourcegraph.commands.executeCommand(
                     'queryGraphQL',
                     `
-                query SearchResults($query: String!) {
-                    search(query: $query) {
+                query SearchResults($query: String!, $patternType: SearchPatternType) {
+                    search(query: $query, patternType: $patternType) {
                         results {
                             results {
                                 __typename
@@ -70,6 +96,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                         query: queryHasCount(query)
                             ? query
                             : `${query} count:99999999`,
+                        patternType,
                     }
                 )
                 if (errors) {
