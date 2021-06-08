@@ -10,5 +10,9 @@ describe('extension', () => {
         it('returns false when count is not specified', () => {
             assert.strictEqual(queryHasCount('const'), false)
         })
+
+        it('returns false when count is escaped', () => {
+            assert.strictEqual(queryHasCount('"count:100" lang:ts'), false)
+        })
     })
 })
