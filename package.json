@@ -51,7 +51,7 @@
       "title": "Search export settings",
       "properties": {
         "searchExport.searchPatternType": {
-          "description": "Search pattern type to use. Starting with Sourcegraph 3.29, search pattern type will be in sync with the search bar.",
+          "description": "Search pattern type to use. Starting with Sourcegraph 3.29, this is automatically in sync with the search bar and is not necessary to configure.",
           "type":"string",
           "enum": ["literal", "regexp", "structural"],
           "default": "literal"
