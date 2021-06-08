@@ -1,6 +1,6 @@
 # Sourcegraph search results CSV export extension
 
-[![Build Status](https://travis-ci.org/sourcegraph/sourcegraph-search-export.svg?branch=master)](https://travis-ci.org/sourcegraph/sourcegraph-search-export)
+[![master build status](https://img.shields.io/github/workflow/status/sourcegraph/sourcegraph-search-export/build/master?logo=github)](https://github.com/sourcegraph/sourcegraph-search-export/actions?query=branch%3Amaster)
 [![codecov](https://codecov.io/gh/sourcegraph/sourcegraph-search-export/branch/master/graph/badge.svg)](https://codecov.io/gh/sourcegraph/sourcegraph-search-export)
 
 A [Sourcegraph extension](https://docs.sourcegraph.com/extensions) to export a list of search results to CSV.
