@@ -1,6 +1,5 @@
 import { Base64 } from 'js-base64'
 import * as sourcegraph from 'sourcegraph'
-import { queryHasCount } from './util'
 
 /**
  * A subset of the SearchResult type defined in the Sourcegraph GraphQL API.
@@ -92,10 +91,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 }
                 `,
                     {
-                        // Add a large count: to ensure we get all results.
-                        query: queryHasCount(query)
-                            ? query
-                            : `${query} count:99999999`,
+                        query,
                         patternType,
                     }
                 )
