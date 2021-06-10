@@ -27,6 +27,7 @@ type SearchPatternType = typeof searchPatternTypes[number]
 
 interface Settings {
     ['searchExport.searchPatternType']?: SearchPatternType
+    ['searchExport.maxMatchContentLength']?: number
 }
 
 export function activate(ctx: sourcegraph.ExtensionContext): void {
@@ -112,8 +113,21 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                         'File external URL',
                         'Search matches',
                     ],
-                    ...results.map(r =>
-                        [
+                    ...results.map(r => {
+                        const searchMatches = r.lineMatches
+                            .map(line =>
+                                line.offsetAndLengths
+                                    .map(offset =>
+                                        line.preview?.substring(
+                                            offset[0],
+                                            offset[0] + offset[1]
+                                        )
+                                    )
+                                    .join(' ')
+                            )
+                            .join(' ')
+
+                        return [
                             r.repository.name,
                             r.repository.externalURLs[0]?.url,
                             r.file.path,
@@ -122,20 +136,9 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                 sourcegraph.internal.sourcegraphURL
                             ).toString(),
                             r.file.externalURLs[0]?.url,
-                            r.lineMatches
-                                .map(line =>
-                                    line.offsetAndLengths
-                                        .map(offset =>
-                                            line.preview?.substring(
-                                                offset[0],
-                                                offset[0] + offset[1]
-                                            )
-                                        )
-                                        .join(' ')
-                                )
-                                .join(' '),
+                            truncateMatches(searchMatches),
                         ].map(s => JSON.stringify(s))
-                    ),
+                    }),
                 ]
                     .map(row => row.join(','))
                     .join('\n')
@@ -154,4 +157,28 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
             }
         )
     )
+}
+
+const DEFAULT_MAX_CONTENT_LENGTH = 200
+/**
+ * Truncate "Search matches" string to avoid hitting the maximum URL length in Chrome:
+ * https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/security/url_display_guidelines/url_display_guidelines.md#url-length)
+ */
+function truncateMatches(searchMatches: string): string {
+    // Determine at what length "Search matches" string should be truncated (to avoid hitting the maximum URL length in Chrome:
+    // https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/security/url_display_guidelines/url_display_guidelines.md#url-length)
+    let maxMatchContentLength = sourcegraph.configuration.get<Settings>().value[
+        'searchExport.maxMatchContentLength'
+    ]
+
+    if (
+        typeof maxMatchContentLength !== 'number' ||
+        maxMatchContentLength < 0
+    ) {
+        maxMatchContentLength = DEFAULT_MAX_CONTENT_LENGTH
+    }
+
+    return searchMatches.length > maxMatchContentLength
+        ? `${searchMatches.slice(0, maxMatchContentLength)}...`
+        : searchMatches
 }
