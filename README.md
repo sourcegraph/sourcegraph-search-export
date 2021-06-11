@@ -19,6 +19,18 @@ A [Sourcegraph extension](https://docs.sourcegraph.com/extensions) to export a l
 1. Perform a search query on Sourcegraph.
 1. Press the **Export to CSV** button above the list of search results. (Note: This may take a while for large result sets. The extension is not optimized for streaming or paginating results.)
 
+## Configuration
+
+The extension can be configured through JSON in user, organization or global settings.
+
+```jsonc
+{
+    // The maximum length of the preview for each match ("Search matches" column).
+    // By default, the limit is 200.
+    "searchExport.maxMatchContentLength": 50
+}
+```
+
 ## Development
 
 1. Run `yarn && yarn run serve` and keep the Parcel bundler process running.
