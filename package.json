@@ -52,9 +52,14 @@
       "properties": {
         "searchExport.searchPatternType": {
           "description": "Search pattern type to use. Starting with Sourcegraph 3.29, this is automatically in sync with the search bar and is not necessary to configure.",
-          "type":"string",
+          "type": "string",
           "enum": ["literal", "regexp", "structural"],
           "default": "literal"
+        },
+        "searchExport.maxMatchContentLength": {
+          "description": "Maximum length of individual search match content ('Search matches' column).",
+          "type": "integer",
+          "default": 200
         }
       }
     }
