@@ -111,9 +111,9 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 }
 
                 // TODO: This CSV generation is not robust.
-                const results = data.search.results.results;
-                let base64Data = new String;
-                if(results[0]["__typename"]==='FileMatch'){
+                const results = data.search.results.results
+                let base64Data = new String()
+                if (results[0]['__typename'] === 'FileMatch') {
                     const csvData = [
                         [
                             'Repository',
@@ -153,18 +153,13 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                         .map(row => row.join(','))
                         .join('\n')
                     base64Data = Base64.encodeURI(csvData)
-                } else if(results[0]["__typename"]==='Repository'){
+                } else if (results[0]['__typename'] === 'Repository') {
                     const csvData = [
-                        [
-                            'Repository',
-                            'Repository external URL',
-                        ],
+                        ['Repository', 'Repository external URL'],
                         ...results.map(r => {
-
-                            return [
-                                r.name,
-                                r.externalURLs[0]?.url,
-                            ].map(s => JSON.stringify(s))
+                            return [r.name, r.externalURLs[0]?.url].map(s =>
+                                JSON.stringify(s)
+                            )
                         }),
                     ]
                         .map(row => row.join(','))
