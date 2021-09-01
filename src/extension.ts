@@ -116,8 +116,8 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 }
 
                 // TODO: This CSV generation is not robust.
-                const results = data.search.results.results,
-                    resultType = '__typename'
+                const results = data.search.results.results
+                const resultType = '__typename'
                 let csvData = new Array()
 
                 if (!results[0]) {
