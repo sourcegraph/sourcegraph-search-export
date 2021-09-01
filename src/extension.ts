@@ -116,11 +116,16 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 }
 
                 // TODO: This CSV generation is not robust.
-                const results = data.search.results.results
-                let csvData
-                const resultType = '__typename'
+                const results = data.search.results.results,
+                    resultType = '__typename'
+                let csvData = new Array()
+
+                if (!results[0]) {
+                    throw new Error(`No results to be exported.`)
+                }
 
                 switch (results[0][resultType]) {
+                    // on FileMatch
                     case 'FileMatch':
                         csvData = [
                             [
@@ -159,6 +164,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                             }),
                         ]
                         break
+                    // on Repository
                     case 'Repository':
                         csvData = [
                             ['Repository', 'Repository external URL'],
@@ -169,12 +175,14 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                             ),
                         ]
                         break
+                    // TODO: on CommitSearchResult
                     case 'CommitSearchResult':
                         throw new Error(
                             `Exporting commit/diff search is currently not supported.`
                         )
+                    // If no returned result
                     default:
-                        throw new Error(`No result to be exported.`)
+                        throw new Error(`Please try another query.`)
                 }
 
                 const base64Data = Base64.encodeURI(
