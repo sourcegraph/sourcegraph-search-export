@@ -69,6 +69,11 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                         results {
                             results {
                                 __typename
+                                ... on CommitSearchResult {
+                                    messagePreview {
+                                        value
+                                    }
+                                }
                                 ... on Repository {
                                     name
                                     externalURLs {
@@ -112,65 +117,69 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
 
                 // TODO: This CSV generation is not robust.
                 const results = data.search.results.results
-                let base64Data
+                let csvData
                 const resultType = '__typename'
-                if (results[0][resultType] === 'FileMatch') {
-                    const csvData = [
-                        [
-                            'Repository',
-                            'Repository external URL',
-                            'File path',
-                            'File URL',
-                            'File external URL',
-                            'Search matches',
-                        ],
-                        ...results.map(r => {
-                            const searchMatches = r.lineMatches
-                                .map(line =>
-                                    line.offsetAndLengths
-                                        .map(offset =>
-                                            line.preview?.substring(
-                                                offset[0],
-                                                offset[0] + offset[1]
-                                            )
-                                        )
-                                        .join(' ')
-                                )
-                                .join(' ')
 
-                            return [
-                                r.repository.name,
-                                r.repository.externalURLs[0]?.url,
-                                r.file.path,
-                                new URL(
-                                    r.file.canonicalURL,
-                                    sourcegraph.internal.sourcegraphURL
-                                ).toString(),
-                                r.file.externalURLs[0]?.url,
-                                truncateMatches(searchMatches),
-                            ].map(s => JSON.stringify(s))
-                        }),
-                    ]
-                        .map(row => row.join(','))
-                        .join('\n')
-                    base64Data = Base64.encodeURI(csvData)
-                } else if (results[0][resultType] === 'Repository') {
-                    const csvData = [
-                        ['Repository', 'Repository external URL'],
-                        ...results.map(r =>
-                            [r.name, r.externalURLs[0]?.url].map(s =>
-                                JSON.stringify(s)
-                            )
-                        ),
-                    ]
-                        .map(row => row.join(','))
-                        .join('\n')
-                    base64Data = Base64.encodeURI(csvData)
-                } else {
-                    throw new Error(
-                        `Exporting commit/diff search is currently not supported.`
-                    )
+                switch (results[0][resultType]) {
+                    case 'FileMatch':
+                        csvData = [
+                            [
+                                'Repository',
+                                'Repository external URL',
+                                'File path',
+                                'File URL',
+                                'File external URL',
+                                'Search matches',
+                            ],
+                            ...results.map(r => {
+                                const searchMatches = r.lineMatches
+                                    .map(line =>
+                                        line.offsetAndLengths
+                                            .map(offset =>
+                                                line.preview?.substring(
+                                                    offset[0],
+                                                    offset[0] + offset[1]
+                                                )
+                                            )
+                                            .join(' ')
+                                    )
+                                    .join(' ')
+
+                                return [
+                                    r.repository.name,
+                                    r.repository.externalURLs[0]?.url,
+                                    r.file.path,
+                                    new URL(
+                                        r.file.canonicalURL,
+                                        sourcegraph.internal.sourcegraphURL
+                                    ).toString(),
+                                    r.file.externalURLs[0]?.url,
+                                    truncateMatches(searchMatches),
+                                ].map(s => JSON.stringify(s))
+                            }),
+                        ]
+                        break
+                    case 'Repository':
+                        csvData = [
+                            ['Repository', 'Repository external URL'],
+                            ...results.map(r =>
+                                [r.name, r.externalURLs[0]?.url].map(s =>
+                                    JSON.stringify(s)
+                                )
+                            ),
+                        ]
+                        break
+                    case 'CommitSearchResult':
+                        throw new Error(
+                            `Exporting commit/diff search is currently not supported.`
+                        )
+                    default:
+                        throw new Error(`No result to be exported.`)
                 }
+
+                const base64Data = Base64.encodeURI(
+                    csvData.map(row => row.join(',')).join('\n')
+                )
 
                 const downloadFilename = `sourcegraph-search-export-${query.replace(
                     /[^\w]/g,
