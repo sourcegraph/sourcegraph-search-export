@@ -119,8 +119,8 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 const results = data.search.results.results
                 const resultType = '__typename'
                 let csvData = new Array()
-
-                if (!results[0]) {
+                
+                if (!results?.length || !results[0]) {
                     throw new Error(`No results to be exported.`)
                 }
 
@@ -180,7 +180,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                         throw new Error(
                             `Exporting commit/diff search is currently not supported.`
                         )
-                    // If no returned result
+                    // If no typename can be found
                     default:
                         throw new Error(`Please try another query.`)
                 }
