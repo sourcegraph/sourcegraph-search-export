@@ -119,7 +119,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 const results = data.search.results.results
                 const resultType = '__typename'
                 let csvData = new Array()
-                
+
                 if (!results?.length || !results[0]) {
                     throw new Error(`No results to be exported.`)
                 }
