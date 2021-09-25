@@ -6,8 +6,6 @@ import * as sourcegraph from 'sourcegraph'
  */
 interface SearchResult {
     __typename: string
-    name: string
-    externalURLs: { url: string }[]
     repository: {
         name: string
         externalURLs: { url: string }[]
@@ -69,17 +67,6 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                         results {
                             results {
                                 __typename
-                                ... on CommitSearchResult {
-                                    messagePreview {
-                                        value
-                                    }
-                                }
-                                ... on Repository {
-                                    name
-                                    externalURLs {
-                                        url
-                                    }
-                                }
                                 ... on FileMatch {
                                     repository {
                                         name
@@ -95,8 +82,8 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                         }
                                     }
                                     lineMatches {
-                                        preview
-                                        offsetAndLengths
+                                      preview
+                                      offsetAndLengths
                                     }
                                 }
                             }
@@ -117,77 +104,45 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
 
                 // TODO: This CSV generation is not robust.
                 const results = data.search.results.results
-                const resultType = '__typename'
-                let csvData = new Array()
-
-                if (!results?.length || !results[0]) {
-                    throw new Error(`No results to be exported.`)
-                }
-
-                switch (results[0][resultType]) {
-                    // on FileMatch
-                    case 'FileMatch':
-                        csvData = [
-                            [
-                                'Repository',
-                                'Repository external URL',
-                                'File path',
-                                'File URL',
-                                'File external URL',
-                                'Search matches',
-                            ],
-                            ...results.map(r => {
-                                const searchMatches = r.lineMatches
-                                    .map(line =>
-                                        line.offsetAndLengths
-                                            .map(offset =>
-                                                line.preview?.substring(
-                                                    offset[0],
-                                                    offset[0] + offset[1]
-                                                )
-                                            )
-                                            .join(' ')
+                const csvData = [
+                    [
+                        'Repository',
+                        'Repository external URL',
+                        'File path',
+                        'File URL',
+                        'File external URL',
+                        'Search matches',
+                    ],
+                    ...results.map(r => {
+                        const searchMatches = r.lineMatches
+                            .map(line =>
+                                line.offsetAndLengths
+                                    .map(offset =>
+                                        line.preview?.substring(
+                                            offset[0],
+                                            offset[0] + offset[1]
+                                        )
                                     )
                                     .join(' ')
+                            )
+                            .join(' ')
 
-                                return [
-                                    r.repository.name,
-                                    r.repository.externalURLs[0]?.url,
-                                    r.file.path,
-                                    new URL(
-                                        r.file.canonicalURL,
-                                        sourcegraph.internal.sourcegraphURL
-                                    ).toString(),
-                                    r.file.externalURLs[0]?.url,
-                                    truncateMatches(searchMatches),
-                                ].map(s => JSON.stringify(s))
-                            }),
-                        ]
-                        break
-                    // on Repository
-                    case 'Repository':
-                        csvData = [
-                            ['Repository', 'Repository external URL'],
-                            ...results.map(r =>
-                                [r.name, r.externalURLs[0]?.url].map(s =>
-                                    JSON.stringify(s)
-                                )
-                            ),
-                        ]
-                        break
-                    // TODO: on CommitSearchResult
-                    case 'CommitSearchResult':
-                        throw new Error(
-                            `Exporting commit/diff search is currently not supported.`
-                        )
-                    // If no typename can be found
-                    default:
-                        throw new Error(`Please try another query.`)
-                }
-
-                const base64Data = Base64.encodeURI(
-                    csvData.map(row => row.join(',')).join('\n')
-                )
+                        return [
+                            r.repository.name,
+                            r.repository.externalURLs[0]?.url,
+                            r.file.path,
+                            new URL(
+                                r.file.canonicalURL,
+                                sourcegraph.internal.sourcegraphURL
+                            ).toString(),
+                            r.file.externalURLs[0]?.url,
+                            truncateMatches(searchMatches),
+                        ].map(s => JSON.stringify(s))
+                    }),
+                ]
+                    .map(row => row.join(','))
+                    .join('\n')
+                const base64Data = Base64.encodeURI(csvData)
 
                 const downloadFilename = `sourcegraph-search-export-${query.replace(
                     /[^\w]/g,
