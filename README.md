@@ -11,13 +11,15 @@ A [Sourcegraph extension](https://docs.sourcegraph.com/extensions) to export a l
 
 ## Features
 
--   Adds an **Export to CSV** button to Sourcegraph search results pages
-
+-   Adds a **Sourcegraph: Export search results** button on top of the Sourcegraph search results pages
+![image](https://user-images.githubusercontent.com/68532117/138749863-2d5bb850-5707-4d3f-9090-ef73236d7053.png)
 ## Usage
 
-1. Add the extension at https://sourcegraph.com/extensions/sourcegraph/search-export or on the **Extensions** page of your self-hosted instance.
+1. Enable the extension at https://sourcegraph.com/extensions/sourcegraph/search-export or on the **Extensions** page of your self-hosted instance.
 1. Perform a search query on Sourcegraph.
-1. Press the **Export to CSV** button above the list of search results. (Note: This may take a while for large result sets. The extension is not optimized for streaming or paginating results.)
+1. Press the **Sourcegraph: Export search results** button above the list of search results. (Note: This may take a while for large result sets. The extension is not optimized for streaming or paginating results.)
+1. Click `Download CSV` from the pop-up window to download the CSV file.
+![image](https://user-images.githubusercontent.com/68532117/138749809-9c074bd8-d9f2-4998-a84e-f6a3b0cfd4aa.png)
 
 ## Configuration
 
