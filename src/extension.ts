@@ -1,4 +1,3 @@
-import { Base64 } from 'js-base64'
 import * as sourcegraph from 'sourcegraph'
 
 /**
@@ -21,6 +20,14 @@ interface SearchResult {
         preview: string
         offsetAndLengths: number[][]
     }[]
+    url: string
+    commit: {
+        subject: string
+        author: {
+            date: string
+            person: { displayName: string }
+        }
+    }
 }
 
 const searchPatternTypes = ['literal', 'regexp', 'structural'] as const
@@ -43,7 +50,6 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                 const userFallbackPatternType = sourcegraph.configuration.get<
                     Settings
                 >().value['searchExport.searchPatternType']
-
                 // Before Sourcegraph 3.29, search toolbar context didn't include search pattern type, so
                 // fallback to "mode" setting, default to 'literal'
                 const patternType: SearchPatternType = searchPatternTypes.includes(
@@ -70,8 +76,15 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                             results {
                                 __typename
                                 ... on CommitSearchResult {
-                                    messagePreview {
-                                        value
+                                      url
+                                      commit {
+                                        subject
+                                        author {
+                                          date
+                                          person {
+                                            displayName
+                                          }
+                                        }
                                     }
                                 }
                                 ... on Repository {
@@ -117,26 +130,27 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
 
                 // TODO: This CSV generation is not robust.
                 const results = data.search.results.results
-                const resultType = '__typename'
-                let csvData = new Array()
-
                 if (!results?.length || !results[0]) {
                     throw new Error(`No results to be exported.`)
                 }
-
-                switch (results[0][resultType]) {
-                    // on FileMatch
-                    case 'FileMatch':
-                        csvData = [
-                            [
-                                'Repository',
-                                'Repository external URL',
-                                'File path',
-                                'File URL',
-                                'File external URL',
-                                'Search matches',
-                            ],
-                            ...results.map(r => {
+                const headers =
+                    results[0].__typename !== 'CommitSearchResult'
+                        ? [
+                              'Match type',
+                              'Repository',
+                              'Repository external URL',
+                              'File path',
+                              'File URL',
+                              'File external URL',
+                              'Search matches',
+                          ]
+                        : ['Date', 'Author', 'Subject', 'Commit URL']
+                const csvData = [
+                    headers,
+                    ...results.map(r => {
+                        switch (r.__typename) {
+                            // on FileMatch
+                            case 'FileMatch':
                                 const searchMatches = r.lineMatches
                                     .map(line =>
                                         line.offsetAndLengths
@@ -151,6 +165,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                     .join(' ')
 
                                 return [
+                                    r.__typename,
                                     r.repository.name,
                                     r.repository.externalURLs[0]?.url,
                                     r.file.path,
@@ -161,42 +176,38 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                     r.file.externalURLs[0]?.url,
                                     truncateMatches(searchMatches),
                                 ].map(s => JSON.stringify(s))
-                            }),
-                        ]
-                        break
-                    // on Repository
-                    case 'Repository':
-                        csvData = [
-                            ['Repository', 'Repository external URL'],
-                            ...results.map(r =>
-                                [r.name, r.externalURLs[0]?.url].map(s =>
-                                    JSON.stringify(s)
-                                )
-                            ),
-                        ]
-                        break
-                    // TODO: on CommitSearchResult
-                    case 'CommitSearchResult':
-                        throw new Error(
-                            `Exporting commit/diff search is currently not supported.`
-                        )
-                    // If no typename can be found
-                    default:
-                        throw new Error(`Please try another query.`)
-                }
+                            // on Repository
+                            case 'Repository':
+                                return [
+                                    r.__typename,
+                                    r.name,
+                                    r.externalURLs[0]?.url,
+                                ].map(s => JSON.stringify(s))
+                            // on CommitSearchResult
+                            case 'CommitSearchResult':
+                                return [
+                                    r.commit.author.date,
+                                    r.commit.author.person.displayName,
+                                    r.commit.subject,
+                                    r.url,
+                                ].map(s => JSON.stringify(s))
+                            // If no typename can be found
+                            default:
+                                throw new Error(`Please try another query.`)
+                        }
+                    }),
+                ]
 
-                const base64Data = Base64.encodeURI(
+                const encodedData = encodeURIComponent(
                     csvData.map(row => row.join(',')).join('\n')
                 )
-
                 const downloadFilename = `sourcegraph-search-export-${query.replace(
                     /[^\w]/g,
                     '-'
                 )}.csv`
-
                 // Show the user a download link for the CSV.
                 sourcegraph.app.activeWindow?.showNotification(
-                    `Search results export is complete.\n\n<a href="data:text/csv;base64,${base64Data}" download="${downloadFilename}"><strong>Download CSV</strong></a>`,
+                    `Search results export is complete.\n\n<a href="data:text/csv;charset=utf-8,${encodedData}" download="${downloadFilename}"><strong>Download CSV</strong></a>`,
                     sourcegraph.NotificationType.Success
                 )
             }
