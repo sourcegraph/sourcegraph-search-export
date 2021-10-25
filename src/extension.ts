@@ -145,7 +145,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                               'File external URL',
                               'Search matches',
                           ]
-                        : ['Date', 'Author', 'Preview', 'URL']
+                        : ['Date', 'Author', 'Subject', 'Commit URL']
                 const csvData = [
                     headers,
                     ...results.map(r => {
@@ -186,9 +186,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                 ].map(s => JSON.stringify(s))
                             // TODO: on CommitSearchResult
                             case 'CommitSearchResult':
-                                throw new Error(
-                                    `Exporting commit/diff search is currently not supported.`
-                                )
+                                return [r.commit.author.date, r.commit.author.person.displayName, r.commit.subject, r.url].map(s => JSON.stringify(s));
                             // If no typename can be found
                             default:
                                 throw new Error(`Please try another query.`)
@@ -196,17 +194,17 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                     }),
                 ]
 
-                const base64Data = Base64.encodeURI(
+                const encodedData = encodeURIComponent(
                     csvData.map(row => row.join(',')).join('\n')
                 )
                 const downloadFilename = `sourcegraph-search-export-${query.replace(
                     /[^\w]/g,
                     '-'
                 )}.csv`
-                console.log(downloadFilename)
+                
                 // Show the user a download link for the CSV.
                 sourcegraph.app.activeWindow?.showNotification(
-                    `Search results export is complete.\n\n<a href="data:text/csv;base64,${base64Data}" download="${downloadFilename}"><strong>Download CSV</strong></a>`,
+                    `Search results export is complete.\n\n<a href="data:text/csv;charset=utf-8,${encodedData}" download="${downloadFilename}"><strong>Download CSV</strong></a>`,
                     sourcegraph.NotificationType.Success
                 )
             }
