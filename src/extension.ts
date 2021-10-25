@@ -1,4 +1,3 @@
-import { Base64 } from 'js-base64'
 import * as sourcegraph from 'sourcegraph'
 
 /**
@@ -184,7 +183,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                     r.name,
                                     r.externalURLs[0]?.url,
                                 ].map(s => JSON.stringify(s))
-                            // TODO: on CommitSearchResult
+                            // on CommitSearchResult
                             case 'CommitSearchResult':
                                 return [
                                     r.commit.author.date,
@@ -206,7 +205,6 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                     /[^\w]/g,
                     '-'
                 )}.csv`
-
                 // Show the user a download link for the CSV.
                 sourcegraph.app.activeWindow?.showNotification(
                     `Search results export is complete.\n\n<a href="data:text/csv;charset=utf-8,${encodedData}" download="${downloadFilename}"><strong>Download CSV</strong></a>`,
