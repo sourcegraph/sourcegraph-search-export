@@ -186,7 +186,12 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                                 ].map(s => JSON.stringify(s))
                             // TODO: on CommitSearchResult
                             case 'CommitSearchResult':
-                                return [r.commit.author.date, r.commit.author.person.displayName, r.commit.subject, r.url].map(s => JSON.stringify(s));
+                                return [
+                                    r.commit.author.date,
+                                    r.commit.author.person.displayName,
+                                    r.commit.subject,
+                                    r.url,
+                                ].map(s => JSON.stringify(s))
                             // If no typename can be found
                             default:
                                 throw new Error(`Please try another query.`)
@@ -201,7 +206,7 @@ export function activate(ctx: sourcegraph.ExtensionContext): void {
                     /[^\w]/g,
                     '-'
                 )}.csv`
-                
+
                 // Show the user a download link for the CSV.
                 sourcegraph.app.activeWindow?.showNotification(
                     `Search results export is complete.\n\n<a href="data:text/csv;charset=utf-8,${encodedData}" download="${downloadFilename}"><strong>Download CSV</strong></a>`,
