@@ -3,6 +3,17 @@
 [![master build status](https://img.shields.io/github/workflow/status/sourcegraph/sourcegraph-search-export/build/master?logo=github)](https://github.com/sourcegraph/sourcegraph-search-export/actions?query=branch%3Amaster)
 [![codecov](https://codecov.io/gh/sourcegraph/sourcegraph-search-export/branch/master/graph/badge.svg)](https://codecov.io/gh/sourcegraph/sourcegraph-search-export)
 
+## ⚠️ Deprecation notice
+
+**Sourcegraph extensions have been deprecated with the September 2022 Sourcegraph
+release. [Learn more](https://docs.sourcegraph.com/extensions/deprecation).**
+
+Starting with the September 2022 release of Sourcegraph, search export is a core part of the product.
+
+The repo and the docs below are kept to support older Sourcegraph versions.
+
+## Description
+
 A [Sourcegraph extension](https://docs.sourcegraph.com/extensions) to export a list of search results to CSV.
 
 [**🗃️ Source code**](https://github.com/sourcegraph/sourcegraph-search-export)
